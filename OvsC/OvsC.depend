@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1580324160 source:c:\users\ak\projekt-c\ovsc\main.c
+1580331643 source:c:\users\ak\projekt-c\ovsc\main.c
 	<stdio.h>
 	<stdlib.h>
 	<gtk/gtk.h>
