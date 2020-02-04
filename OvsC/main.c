@@ -18,12 +18,117 @@ GtkWidget *event_board;
 GdkRGBA red, blue, white;
 int chosen_color;
 int board_state[6][6]={0};
-//int turn=0;
+int turn=0;
 
 typedef struct pos {
     int x;
     int y;
 } position;
+
+int check_diagonal(int x, int y, int dir)
+{
+    int count = 0, current = board_state[x][y];
+    while(x >= 0 && y >= 0 && x < 6 && y < 6)
+    {
+        if(board_state[x][y]==current && board_state[x][y]!=0)
+            count++;
+        else
+        {
+            count = 1;
+            current = board_state[x][y];
+        }
+        if(count >= 5)
+            return 1;
+        y += dir;
+        x++;
+    }
+    return 0;
+}
+
+void check_win_order(void)
+{
+    int current, count, win = 0;
+    for(int i=0; i<6; i++)
+    {
+        count = 1;
+        for(int j=0; j<6; j++)
+        {
+            if(j==0)
+                current=board_state[i][j];
+            else
+            {
+                if(board_state[i][j]==current && current != 0)
+                    count++;
+                else
+                {
+                    if(count >= 5)
+                    {
+                        win = 1;
+                        break;
+                    }
+                    else
+                    {
+                        current = board_state[i][j];
+                        count = 1;
+                    }
+
+                }
+
+            }
+        }
+        if(count >= 5)
+        {
+            win = 1;
+            break;
+        }
+    }
+
+    for(int i=0; i<6; i++)
+    {
+        count = 1;
+        for(int j=0; j<6; j++)
+        {
+            if(j==0)
+                current=board_state[j][i];
+            else
+            {
+                if(board_state[j][i]==current && current != 0)
+                    count++;
+                else
+                {
+                    if(count >= 5)
+                    {
+                        win = 1;
+                        break;
+                    }
+                    else
+                    {
+                        current = board_state[j][i];
+                        count = 1;
+                    }
+
+                }
+
+            }
+        }
+        if(count >= 5)
+        {
+            win = 1;
+            break;
+        }
+    }
+    if(win || check_diagonal(0, 0, 1) || check_diagonal(1, 0, 1) || check_diagonal(0, 1, 1) || check_diagonal(0, 5, -1) || check_diagonal(0, 4, -1) || check_diagonal(1, 5, -1))
+        gtk_label_set_text(GTK_LABEL(move),"Porzadek wygral");
+}
+
+void check_win_chaos(void)
+{
+    for(int i=0; i<6; i++)
+        for(int j=0; j<6; j++)
+            if(board_state[i][j]==0)
+                return;
+    gtk_label_set_text(GTK_LABEL(move),"Chaos wygral");
+}
 
 static void change_color(GtkToggleButton *button, gpointer data)
 {
@@ -54,7 +159,19 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
     int column = (event->x)/100;
     int row = (event->y)/100;
     if(board_state[column][row]==0)
-        board_state[column][row]=chosen_color;
+        {
+            board_state[column][row]=chosen_color;
+            if(turn == 0)
+            {
+                turn = 1;
+                gtk_label_set_text(GTK_LABEL(move),"Tura: Chaos");
+            }
+            else
+            {
+                turn = 0;
+                gtk_label_set_text(GTK_LABEL(move),"Tura: Porzadek");
+            }
+        }
     else
         return TRUE;
     GtkWidget *child = gtk_grid_get_child_at(GTK_GRID(board), column, row);
@@ -63,6 +180,8 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
     cell_position->y = row;
     g_signal_connect(child, "draw", G_CALLBACK(paint_cell), cell_position);
     gtk_widget_queue_draw(child);
+    check_win_order();
+    check_win_chaos();
     return TRUE;
 }
 
@@ -81,7 +200,7 @@ gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_posit
 static void set_main_area(void)
 {
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    move = gtk_label_new("TURA");
+    move = gtk_label_new("TURA: Porzadek");
     board = gtk_grid_new();
 
     for (int x=0; x<6; x++)
@@ -136,7 +255,6 @@ static void set_window (GtkWidget *opcja, gpointer data)
 
 static void set_menu (void)
 {
-
     menu = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(menu), "Order and Chaos");
     g_signal_connect(menu, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -159,8 +277,6 @@ static void set_menu (void)
     g_signal_connect(menu_new_game, "clicked", G_CALLBACK(set_window), "nowa gra");
     g_signal_connect(menu_load, "clicked", G_CALLBACK(set_window), "wczytaj zapis");
     g_signal_connect(menu_ai, "clicked", G_CALLBACK(set_window), "komputer");
-
-
 }
 
 void set_colors(void)
@@ -176,7 +292,6 @@ int main(int argc, char **argv)
     gtk_init(&argc, &argv);
 
     set_colors();
-
     set_menu();
 
     gtk_main();
