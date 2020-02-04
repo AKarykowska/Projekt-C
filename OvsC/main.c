@@ -11,11 +11,22 @@ GtkWidget *move; //label
 GtkWidget *board; //grid
 GtkWidget *color; //na razie label
 
+GtkWidget *event_board;
+
+gboolean change_color (GtkWidget *board, GdkEventButton *event, gpointer data)
+{
+    int kolumna = (event->x)/100;
+    int wiersz = (event->y)/100;
+    printf("%d %d ", kolumna, wiersz);
+    return TRUE;
+}
+
 static void set_main_area(void)
 {
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     move = gtk_label_new("TURA");
     board = gtk_grid_new();
+
     for (int x=0; x<6; x++)
         for(int y=0; y<6; y++)
         {
@@ -26,10 +37,17 @@ static void set_main_area(void)
             gtk_grid_attach(GTK_GRID(board), child, x, y, 1, 1);
 
         }
+    event_board = gtk_event_box_new();
+    gtk_container_add (GTK_CONTAINER (event_board), board);
+
     color = gtk_label_new("KOLOR");
+
     gtk_box_pack_start(GTK_BOX(main_box),move,1,1,1);
-    gtk_box_pack_start(GTK_BOX(main_box),board,1,1,1);
+    gtk_box_pack_start(GTK_BOX(main_box),event_board,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),color,1,1,1);
+
+    gtk_widget_set_events (event_board, GDK_BUTTON_PRESS);
+    g_signal_connect (event_board, "button_press_event", G_CALLBACK(change_color), NULL);
 
     gtk_container_add(GTK_CONTAINER(window), main_box);
     gtk_widget_show_all(window);
