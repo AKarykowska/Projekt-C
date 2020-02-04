@@ -15,9 +15,10 @@ GtkWidget *color_button1, *color_button2;
 
 GtkWidget *event_board;
 
-GdkRGBA chosen_color;
-
-int turn=0;
+GdkRGBA red, blue, white;
+int chosen_color;
+int board_state[6][6]={0};
+//int turn=0;
 
 typedef struct pos {
     int x;
@@ -28,9 +29,9 @@ static void change_color(GtkToggleButton *button, gpointer data)
 {
     int color = GPOINTER_TO_INT(data);
     if(color == 1)
-        gdk_rgba_parse(&chosen_color, "#FF0000");
+        chosen_color = 1;
     else
-        gdk_rgba_parse(&chosen_color, "#0000FF");
+        chosen_color = 2;
 }
 
 gboolean paint_cell(GtkWidget *child, cairo_t *context, position *cell_position)
@@ -40,7 +41,10 @@ gboolean paint_cell(GtkWidget *child, cairo_t *context, position *cell_position)
     width = gtk_widget_get_allocated_width(child);
     gtk_render_background(gtk_widget_get_style_context(child), context, 0, 0, width, height);
     cairo_rectangle(context, 0, 0, width, height);
-    gdk_cairo_set_source_rgba(context, &chosen_color);
+    if(board_state[cell_position->x][cell_position->y]==1)
+        gdk_cairo_set_source_rgba(context, &red);
+    else
+        gdk_cairo_set_source_rgba(context, &blue);
     cairo_fill(context);
     return FALSE;
 }
@@ -49,16 +53,21 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
 {
     int column = (event->x)/100;
     int row = (event->y)/100;
+    if(board_state[column][row]==0)
+        board_state[column][row]=chosen_color;
+    else
+        return TRUE;
     GtkWidget *child = gtk_grid_get_child_at(GTK_GRID(board), column, row);
-    g_signal_connect(child, "draw", G_CALLBACK(paint_cell), NULL);
+    position *cell_position = malloc(sizeof(position));
+    cell_position->x = column;
+    cell_position->y = row;
+    g_signal_connect(child, "draw", G_CALLBACK(paint_cell), cell_position);
     gtk_widget_queue_draw(child);
     return TRUE;
 }
 
 gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_position)
 {
-    GdkRGBA white;
-    gdk_rgba_parse(&white, "#FFF");
     guint height, width;
     height = gtk_widget_get_allocated_height(child);
     width = gtk_widget_get_allocated_width(child);
@@ -154,11 +163,19 @@ static void set_menu (void)
 
 }
 
+void set_colors(void)
+{
+    gdk_rgba_parse(&white, "#FFF");
+    gdk_rgba_parse(&red, "#FF0000");
+    gdk_rgba_parse(&blue, "#0000FF");
+    chosen_color = 1;
+}
+
 int main(int argc, char **argv)
 {
     gtk_init(&argc, &argv);
 
-    gdk_rgba_parse(&chosen_color, "#FF0000");
+    set_colors();
 
     set_menu();
 
