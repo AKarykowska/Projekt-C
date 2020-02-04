@@ -13,12 +13,51 @@ GtkWidget *color; //na razie label
 
 GtkWidget *event_board;
 
-gboolean change_color (GtkWidget *board, GdkEventButton *event, gpointer data)
+GdkRGBA chosen_color;
+
+typedef struct pos {
+    int x;
+    int y;
+} position;
+
+void change_color_to_red (void)
 {
-    int kolumna = (event->x)/100;
-    int wiersz = (event->y)/100;
-    printf("%d %d ", kolumna, wiersz);
+    chosen_color.red = 1;
+    chosen_color.blue = 0;
+    chosen_color.green = 0;
+}
+
+void change_color_to_blue (void)
+{
+    chosen_color.red = 0;
+    chosen_color.blue = 1;
+    chosen_color.green = 0;
+}
+
+gboolean paint_cell(GtkWidget *child, cairo_t *context, position *cell_position)
+{
+    gdk_cairo_set_source_rgba(context, &chosen_color);
+    return FALSE;
+}
+
+gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpointer data)
+{
+    int column = (event->x)/100;
+    int row = (event->y)/100;
+    printf("%d %d ", column, row);
+    GtkWidget *child = gtk_grid_get_child_at(GTK_GRID(board), column, row);
+    g_signal_connect(child, "draw", G_CALLBACK(paint_cell), NULL);
     return TRUE;
+}
+
+gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_position)
+{
+    GdkRGBA white;
+    white.blue = 1;
+    white.green = 1;
+    white.red = 1;
+    gdk_cairo_set_source_rgba(context, &white);
+    return FALSE;
 }
 
 static void set_main_area(void)
@@ -35,7 +74,8 @@ static void set_main_area(void)
             gtk_widget_set_size_request(child, 100, 100);
             gtk_frame_set_shadow_type(GTK_FRAME(child), GTK_SHADOW_IN);
             gtk_grid_attach(GTK_GRID(board), child, x, y, 1, 1);
-
+            position *cell_position = malloc(sizeof(position));
+            g_signal_connect(child, "draw", G_CALLBACK(set_cell_color), NULL);
         }
     event_board = gtk_event_box_new();
     gtk_container_add (GTK_CONTAINER (event_board), board);
@@ -47,7 +87,7 @@ static void set_main_area(void)
     gtk_box_pack_start(GTK_BOX(main_box),color,1,1,1);
 
     gtk_widget_set_events (event_board, GDK_BUTTON_PRESS);
-    g_signal_connect (event_board, "button_press_event", G_CALLBACK(change_color), NULL);
+    g_signal_connect (event_board, "button_press_event", G_CALLBACK(paint_configuration), NULL);
 
     gtk_container_add(GTK_CONTAINER(window), main_box);
     gtk_widget_show_all(window);
@@ -97,6 +137,8 @@ static void set_menu (void)
 int main(int argc, char **argv)
 {
     gtk_init(&argc, &argv);
+
+    change_color_to_red();
 
     set_menu();
 
