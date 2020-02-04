@@ -22,21 +22,23 @@ typedef struct pos {
 
 void change_color_to_red (void)
 {
-    chosen_color.red = 1;
-    chosen_color.blue = 0;
-    chosen_color.green = 0;
+    gdk_rgba_parse(&chosen_color, "#FF0000");
 }
 
 void change_color_to_blue (void)
 {
-    chosen_color.red = 0;
-    chosen_color.blue = 1;
-    chosen_color.green = 0;
+    gdk_rgba_parse(&chosen_color, "#0000FF");
 }
 
 gboolean paint_cell(GtkWidget *child, cairo_t *context, position *cell_position)
 {
+    guint height, width;
+    height = gtk_widget_get_allocated_height(child);
+    width = gtk_widget_get_allocated_width(child);
+    gtk_render_background(gtk_widget_get_style_context(child), context, 0, 0, width, height);
+    cairo_rectangle(context, 0, 0, width, height);
     gdk_cairo_set_source_rgba(context, &chosen_color);
+    cairo_fill(context);
     return FALSE;
 }
 
@@ -44,19 +46,23 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
 {
     int column = (event->x)/100;
     int row = (event->y)/100;
-    printf("%d %d ", column, row);
     GtkWidget *child = gtk_grid_get_child_at(GTK_GRID(board), column, row);
     g_signal_connect(child, "draw", G_CALLBACK(paint_cell), NULL);
+    gtk_widget_queue_draw(child);
     return TRUE;
 }
 
 gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_position)
 {
     GdkRGBA white;
-    white.blue = 1;
-    white.green = 1;
-    white.red = 1;
+    gdk_rgba_parse(&white, "#FFF");
+    guint height, width;
+    height = gtk_widget_get_allocated_height(child);
+    width = gtk_widget_get_allocated_width(child);
+    gtk_render_background(gtk_widget_get_style_context(child), context, 0, 0, width, height);
+    cairo_rectangle(context, 0, 0, width, height);
     gdk_cairo_set_source_rgba(context, &white);
+    cairo_fill(context);
     return FALSE;
 }
 
