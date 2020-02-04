@@ -9,25 +9,28 @@ GtkWidget *menu_box, *menu_new_game, *menu_load, *menu_ai, *title;
 GtkWidget *main_box; //pionowy
 GtkWidget *move; //label
 GtkWidget *board; //grid
-GtkWidget *color; //na razie label
+GtkWidget *choose_color; //label
+GtkWidget *color; //poziomy
+GtkWidget *color_button1, *color_button2;
 
 GtkWidget *event_board;
 
 GdkRGBA chosen_color;
+
+int turn=0;
 
 typedef struct pos {
     int x;
     int y;
 } position;
 
-void change_color_to_red (void)
+static void change_color(GtkToggleButton *button, gpointer data)
 {
-    gdk_rgba_parse(&chosen_color, "#FF0000");
-}
-
-void change_color_to_blue (void)
-{
-    gdk_rgba_parse(&chosen_color, "#0000FF");
+    int color = GPOINTER_TO_INT(data);
+    if(color == 1)
+        gdk_rgba_parse(&chosen_color, "#FF0000");
+    else
+        gdk_rgba_parse(&chosen_color, "#0000FF");
 }
 
 gboolean paint_cell(GtkWidget *child, cairo_t *context, position *cell_position)
@@ -84,13 +87,24 @@ static void set_main_area(void)
             g_signal_connect(child, "draw", G_CALLBACK(set_cell_color), NULL);
         }
     event_board = gtk_event_box_new();
+    gtk_widget_set_valign(event_board, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(event_board, GTK_ALIGN_CENTER);
     gtk_container_add (GTK_CONTAINER (event_board), board);
 
-    color = gtk_label_new("KOLOR");
+    choose_color = gtk_label_new("Wybierz kolor: ");
+    color = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    color_button1 = gtk_radio_button_new_with_label(NULL, "czerwony");
+    color_button2 = gtk_radio_button_new_with_label(gtk_radio_button_get_group(GTK_BUTTON(color_button1)), "niebieski");
+    gtk_box_pack_start(GTK_BOX(color),choose_color,1,1,1);
+    gtk_box_pack_start(GTK_BOX(color),color_button1,1,1,1);
+    gtk_box_pack_start(GTK_BOX(color),color_button2,1,1,1);
 
     gtk_box_pack_start(GTK_BOX(main_box),move,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),event_board,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),color,1,1,1);
+
+    g_signal_connect(color_button1, "toggled", G_CALLBACK(change_color),GINT_TO_POINTER(1));
+    g_signal_connect(color_button2, "toggled", G_CALLBACK(change_color),GINT_TO_POINTER(2));
 
     gtk_widget_set_events (event_board, GDK_BUTTON_PRESS);
     g_signal_connect (event_board, "button_press_event", G_CALLBACK(paint_configuration), NULL);
@@ -144,7 +158,7 @@ int main(int argc, char **argv)
 {
     gtk_init(&argc, &argv);
 
-    change_color_to_red();
+    gdk_rgba_parse(&chosen_color, "#FF0000");
 
     set_menu();
 
