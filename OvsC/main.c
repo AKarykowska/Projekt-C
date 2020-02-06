@@ -174,12 +174,12 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
             if(turn == 0)
             {
                 turn = 1;
-                gtk_label_set_text(GTK_LABEL(move),"Tura: Chaos");
+                gtk_label_set_text(GTK_LABEL(move),"TURA: Chaos");
             }
             else
             {
                 turn = 0;
-                gtk_label_set_text(GTK_LABEL(move),u8"Tura: Porządek");
+                gtk_label_set_text(GTK_LABEL(move),u8"TURA: Porządek");
             }
         }
     else
@@ -297,7 +297,10 @@ static void save_game(GtkWidget *button, gpointer data)
 static void set_main_area(void)
 {
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    move = gtk_label_new(u8"TURA: Porządek");
+    if(turn==0)
+        move = gtk_label_new(u8"TURA: Porządek");
+    else
+        move = gtk_label_new(u8"TURA: Chaos");
     gtk_widget_set_size_request(move, 600, 50);
     board = gtk_grid_new();
 
