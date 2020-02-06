@@ -11,6 +11,7 @@ void erase_board(void)
         for(int j=0; j<6; j++)
             board_state[i][j]=0;
     turn = 0;
+    end = 0;
 }
 
 int check_diagonal(int x, int y, int dir)
