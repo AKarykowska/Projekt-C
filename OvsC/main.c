@@ -12,6 +12,7 @@ GtkWidget *board; //grid
 GtkWidget *choose_color; //label
 GtkWidget *color; //poziomy
 GtkWidget *color_button1, *color_button2;
+GtkWidget *return_to_menu;
 
 GtkWidget *event_board;
 
@@ -118,7 +119,7 @@ void check_win_order(void)
         }
     }
     if(win || check_diagonal(0, 0, 1) || check_diagonal(1, 0, 1) || check_diagonal(0, 1, 1) || check_diagonal(0, 5, -1) || check_diagonal(0, 4, -1) || check_diagonal(1, 5, -1))
-        gtk_label_set_text(GTK_LABEL(move),"Porzadek wygral");
+        gtk_label_set_text(GTK_LABEL(move),u8"Porządek wygrał");
 }
 
 void check_win_chaos(void)
@@ -127,7 +128,7 @@ void check_win_chaos(void)
         for(int j=0; j<6; j++)
             if(board_state[i][j]==0)
                 return;
-    gtk_label_set_text(GTK_LABEL(move),"Chaos wygral");
+    gtk_label_set_text(GTK_LABEL(move),u8"Chaos wygrał");
 }
 
 static void change_color(GtkToggleButton *button, gpointer data)
@@ -169,7 +170,7 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
             else
             {
                 turn = 0;
-                gtk_label_set_text(GTK_LABEL(move),"Tura: Porzadek");
+                gtk_label_set_text(GTK_LABEL(move),u8"Tura: Porządek");
             }
         }
     else
@@ -197,10 +198,15 @@ gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_posit
     return FALSE;
 }
 
+static void destroy_window(GtkWidget *widget, gpointer data)
+{
+    gtk_widget_destroy(window);
+}
+
 static void set_main_area(void)
 {
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    move = gtk_label_new("TURA: Porzadek");
+    move = gtk_label_new(u8"TURA: Porządek");
     board = gtk_grid_new();
 
     for (int x=0; x<6; x++)
@@ -227,9 +233,14 @@ static void set_main_area(void)
     gtk_box_pack_start(GTK_BOX(color),color_button1,1,1,1);
     gtk_box_pack_start(GTK_BOX(color),color_button2,1,1,1);
 
+    return_to_menu = gtk_button_new_with_label(u8"Powrót do menu");
+    g_signal_connect(return_to_menu, "clicked", G_CALLBACK(destroy_window), NULL);
+
+
     gtk_box_pack_start(GTK_BOX(main_box),move,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),event_board,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),color,1,1,1);
+    gtk_box_pack_start(GTK_BOX(main_box),return_to_menu,1,1,1);
 
     g_signal_connect(color_button1, "toggled", G_CALLBACK(change_color),GINT_TO_POINTER(1));
     g_signal_connect(color_button2, "toggled", G_CALLBACK(change_color),GINT_TO_POINTER(2));
@@ -241,6 +252,11 @@ static void set_main_area(void)
     gtk_widget_show_all(window);
 }
 
+static void show_menu (GtkWidget *window, gpointer data)
+{
+    gtk_widget_show_all(menu);
+}
+
 static void set_window (GtkWidget *opcja, gpointer data)
 {
     gtk_widget_hide(menu);
@@ -248,7 +264,7 @@ static void set_window (GtkWidget *opcja, gpointer data)
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Order and Chaos");
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER_ALWAYS);
-    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    g_signal_connect(window, "destroy", G_CALLBACK(show_menu), NULL);
 
     set_main_area();
 }
