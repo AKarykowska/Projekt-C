@@ -24,6 +24,7 @@ GdkRGBA red, blue, white;
 int chosen_color;
 int board_state[6][6]={0};
 int turn=0;
+int end=0;
 
 typedef struct pos {
     int x;
@@ -123,7 +124,10 @@ void check_win_order(void)
         }
     }
     if(win || check_diagonal(0, 0, 1) || check_diagonal(1, 0, 1) || check_diagonal(0, 1, 1) || check_diagonal(0, 5, -1) || check_diagonal(0, 4, -1) || check_diagonal(1, 5, -1))
-        gtk_label_set_text(GTK_LABEL(move),u8"Porządek wygrał");
+    {
+        gtk_label_set_text(GTK_LABEL(move),u8"PORZĄDEK wygrał");
+        end = 1;
+    }
 }
 
 void check_win_chaos(void)
@@ -132,7 +136,8 @@ void check_win_chaos(void)
         for(int j=0; j<6; j++)
             if(board_state[i][j]==0)
                 return;
-    gtk_label_set_text(GTK_LABEL(move),u8"Chaos wygrał");
+    gtk_label_set_text(GTK_LABEL(move),u8"CHAOS wygrał");
+    end = 1;
 }
 
 static void change_color(GtkToggleButton *button, gpointer data)
@@ -163,7 +168,7 @@ gboolean paint_configuration(GtkWidget *event_board, GdkEventButton *event, gpoi
 {
     int column = (event->x)/100;
     int row = (event->y)/100;
-    if(board_state[column][row]==0)
+    if(board_state[column][row]==0 && end == 0)
         {
             board_state[column][row]=chosen_color;
             if(turn == 0)
@@ -293,6 +298,7 @@ static void set_main_area(void)
 {
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     move = gtk_label_new(u8"TURA: Porządek");
+    gtk_widget_set_size_request(move, 600, 50);
     board = gtk_grid_new();
 
     for (int x=0; x<6; x++)
@@ -364,13 +370,14 @@ static void set_menu (void)
 {
     menu = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(menu), "Order and Chaos");
+    gtk_widget_set_size_request(menu, 400, 200);
     g_signal_connect(menu, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     gtk_window_set_position(GTK_WINDOW(menu), GTK_WIN_POS_CENTER_ALWAYS);
     menu_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     menu_new_game = gtk_button_new_with_label(u8"Nowa gra dla dwóch osób");
     menu_load = gtk_button_new_with_label(u8"Wczytaj grę");
-    title = gtk_label_new("Order and Chaos");
+    title = gtk_label_new("ORDER & CHAOS");
 
     gtk_box_pack_start(GTK_BOX(menu_box),title,1,1,1);
     gtk_box_pack_start(GTK_BOX(menu_box),menu_new_game,1,1,1);
