@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
+#include <string.h>
+
+static void set_window(GtkWidget *opcja, gpointer data);
 
 GtkWidget *window;
 GtkWidget *menu;
-GtkWidget *menu_box, *menu_new_game, *menu_load, *menu_ai, *title;
+GtkWidget *menu_box, *menu_new_game, *menu_load, *title;
 
 GtkWidget *main_box; //pionowy
 GtkWidget *move; //label
@@ -13,6 +16,7 @@ GtkWidget *choose_color; //label
 GtkWidget *color; //poziomy
 GtkWidget *color_button1, *color_button2;
 GtkWidget *return_to_menu;
+GtkWidget *save;
 
 GtkWidget *event_board;
 
@@ -193,7 +197,12 @@ gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_posit
     width = gtk_widget_get_allocated_width(child);
     gtk_render_background(gtk_widget_get_style_context(child), context, 0, 0, width, height);
     cairo_rectangle(context, 0, 0, width, height);
-    gdk_cairo_set_source_rgba(context, &white);
+    if(board_state[cell_position->x][cell_position->y]==0)
+        gdk_cairo_set_source_rgba(context, &white);
+    else if (board_state[cell_position->x][cell_position->y]==1)
+        gdk_cairo_set_source_rgba(context, &red);
+    else
+        gdk_cairo_set_source_rgba(context, &blue);
     cairo_fill(context);
     return FALSE;
 }
@@ -201,6 +210,83 @@ gboolean set_cell_color(GtkWidget *child, cairo_t *context, position *cell_posit
 static void destroy_window(GtkWidget *widget, gpointer data)
 {
     gtk_widget_destroy(window);
+}
+
+void save_to_file(char *filename)
+{
+    FILE *file = fopen(filename, "w");
+    if(file == NULL)
+        return;
+    fprintf(file, "%d\n", turn);
+    for(int i=0; i<6; i++)
+    {
+        for(int j=0; j<6; j++)
+        {
+            fprintf(file, "%d ", board_state[j][i]);
+        }
+        fprintf(file, "\n");
+    }
+    fclose(file);
+}
+
+void load_file(char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if(file == NULL)
+        return;
+    fscanf(file, "%d", &turn);
+    for(int i=0; i<6; i++)
+    {
+        for(int j=0; j<6; j++)
+        {
+            fscanf(file, "%d", &board_state[j][i]);
+        }
+    }
+    fclose(file);
+}
+
+void load_game(GtkWidget *button, gpointer data)
+{
+    GtkWidget *dialog;
+    gint res;
+
+    dialog = gtk_file_chooser_dialog_new("Wybierz zapis", GTK_WINDOW(menu), GTK_FILE_CHOOSER_ACTION_OPEN, ("Anuluj"), GTK_RESPONSE_CANCEL, ("Wczytaj"), GTK_RESPONSE_ACCEPT, NULL);
+
+    res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if(res == GTK_RESPONSE_ACCEPT)
+      {
+        char *filename;
+        GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+        filename = gtk_file_chooser_get_filename(chooser);
+        load_file(filename);
+        g_free(filename);
+    }
+    gtk_widget_destroy(dialog);
+    set_window(menu, NULL);
+}
+
+static void save_game(GtkWidget *button, gpointer data)
+{
+    GtkWidget *dialog;
+    GtkFileChooser *chooser;
+    gint res;
+
+    dialog = gtk_file_chooser_dialog_new("Wybierz zapis", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, ("Anuluj"), GTK_RESPONSE_CANCEL, ("Zapisz"), GTK_RESPONSE_ACCEPT, NULL);
+    chooser = GTK_FILE_CHOOSER(dialog);
+
+    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+
+    gtk_file_chooser_set_current_name(chooser, ("nowy.txt"));
+
+    res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if(res == GTK_RESPONSE_ACCEPT)
+      {
+        char *filename;
+        filename = gtk_file_chooser_get_filename(chooser);
+        save_to_file(filename);
+        g_free(filename);
+    }
+    gtk_widget_destroy (dialog);
 }
 
 static void set_main_area(void)
@@ -218,7 +304,9 @@ static void set_main_area(void)
             gtk_frame_set_shadow_type(GTK_FRAME(child), GTK_SHADOW_IN);
             gtk_grid_attach(GTK_GRID(board), child, x, y, 1, 1);
             position *cell_position = malloc(sizeof(position));
-            g_signal_connect(child, "draw", G_CALLBACK(set_cell_color), NULL);
+            cell_position->x = x;
+            cell_position->y = y;
+            g_signal_connect(child, "draw", G_CALLBACK(set_cell_color), cell_position);
         }
     event_board = gtk_event_box_new();
     gtk_widget_set_valign(event_board, GTK_ALIGN_CENTER);
@@ -236,10 +324,13 @@ static void set_main_area(void)
     return_to_menu = gtk_button_new_with_label(u8"Powrót do menu");
     g_signal_connect(return_to_menu, "clicked", G_CALLBACK(destroy_window), NULL);
 
+    save = gtk_button_new_with_label(u8"Zapisz grę");
+    g_signal_connect(save, "clicked", G_CALLBACK(save_game), NULL);
 
     gtk_box_pack_start(GTK_BOX(main_box),move,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),event_board,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),color,1,1,1);
+    gtk_box_pack_start(GTK_BOX(main_box),save,1,1,1);
     gtk_box_pack_start(GTK_BOX(main_box),return_to_menu,1,1,1);
 
     g_signal_connect(color_button1, "toggled", G_CALLBACK(change_color),GINT_TO_POINTER(1));
@@ -252,12 +343,12 @@ static void set_main_area(void)
     gtk_widget_show_all(window);
 }
 
-static void show_menu (GtkWidget *window, gpointer data)
+static void show_menu(GtkWidget *window, gpointer data)
 {
     gtk_widget_show_all(menu);
 }
 
-static void set_window (GtkWidget *opcja, gpointer data)
+static void set_window(GtkWidget *opcja, gpointer data)
 {
     gtk_widget_hide(menu);
 
@@ -278,21 +369,18 @@ static void set_menu (void)
     gtk_window_set_position(GTK_WINDOW(menu), GTK_WIN_POS_CENTER_ALWAYS);
     menu_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
     menu_new_game = gtk_button_new_with_label(u8"Nowa gra dla dwóch osób");
-    menu_load = gtk_button_new_with_label("Wczytaj grę");
-    menu_ai = gtk_button_new_with_label("Nowa gra z komputerem");
+    menu_load = gtk_button_new_with_label(u8"Wczytaj grę");
     title = gtk_label_new("Order and Chaos");
 
     gtk_box_pack_start(GTK_BOX(menu_box),title,1,1,1);
     gtk_box_pack_start(GTK_BOX(menu_box),menu_new_game,1,1,1);
     gtk_box_pack_start(GTK_BOX(menu_box),menu_load,1,1,1);
-    gtk_box_pack_start(GTK_BOX(menu_box),menu_ai,1,1,1);
 
     gtk_container_add(GTK_CONTAINER(menu),menu_box);
     gtk_widget_show_all(menu);
 
     g_signal_connect(menu_new_game, "clicked", G_CALLBACK(set_window), "nowa gra");
-    g_signal_connect(menu_load, "clicked", G_CALLBACK(set_window), "wczytaj zapis");
-    g_signal_connect(menu_ai, "clicked", G_CALLBACK(set_window), "komputer");
+    g_signal_connect(menu_load, "clicked", G_CALLBACK(load_game), "wczytaj zapis");
 }
 
 void set_colors(void)

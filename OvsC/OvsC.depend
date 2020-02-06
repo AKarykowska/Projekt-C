@@ -1,8 +1,9 @@
 # depslib dependency file v1.0
-1580845962 source:c:\users\ak\projekt-c\ovsc\main.c
+1581019827 source:c:\users\ak\projekt-c\ovsc\main.c
 	<stdio.h>
 	<stdlib.h>
 	<gtk/gtk.h>
+	<string.h>
 
 1575356355 c:\msys64\mingw64\include\gtk-3.0\gtk\gtk.h
 	<gdk/gdk.h>
