@@ -130,10 +130,14 @@ void save_game(GtkWidget *button, gpointer data)
 void set_main_area(void)
 {
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-    if(turn==0)
+    if(turn==0 && end==0)
         move = gtk_label_new(u8"TURA: Porządek");
-    else
+    else if(turn==1 && end==0)
         move = gtk_label_new(u8"TURA: Chaos");
+    else if (end==1)
+        move = gtk_label_new(u8"PORZĄDEK wygrał");
+    else
+        move = gtk_label_new(u8"CHAOS wygrał");
     gtk_widget_set_size_request(move, 600, 50);
     board = gtk_grid_new();
 

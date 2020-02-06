@@ -120,7 +120,7 @@ void check_win_chaos(void)
             if(board_state[i][j]==0)
                 return;
     change_label_win(2);
-    end = 1;
+    end = 2;
 }
 
 void save_to_file(char *filename)
@@ -129,6 +129,7 @@ void save_to_file(char *filename)
     if(file == NULL)
         return;
     fprintf(file, "%d\n", turn);
+    fprintf(file, "%d\n", end);
     for(int i=0; i<6; i++)
     {
         for(int j=0; j<6; j++)
@@ -146,6 +147,7 @@ void load_file(char *filename)
     if(file == NULL)
         return;
     fscanf(file, "%d", &turn);
+    fscanf(file, "%d", &end);
     for(int i=0; i<6; i++)
     {
         for(int j=0; j<6; j++)
