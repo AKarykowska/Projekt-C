@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1581027825 source:c:\users\ak\projekt-c\ovsc\main.c
+1581032467 source:c:\users\ak\projekt-c\ovsc\main.c
 	<stdio.h>
 	<stdlib.h>
 	<gtk/gtk.h>
@@ -2908,7 +2908,7 @@
 1581026513 c:\users\ak\projekt-c\ovsc\view-model\view-model.h
 	<gtk/gtk.h>
 
-1581027940 source:c:\users\ak\projekt-c\ovsc\model\logic.c
+1581028586 source:c:\users\ak\projekt-c\ovsc\model\logic.c
 	<stdio.h>
 	<stdlib.h>
 	"../view/graphic.h"
@@ -2923,7 +2923,7 @@
 	"view-model.h"
 	"../model/logic.h"
 
-1581027825 source:c:\users\ak\projekt-c\ovsc\view\graphic.c
+1581028586 source:c:\users\ak\projekt-c\ovsc\view\graphic.c
 	<stdio.h>
 	<stdlib.h>
 	<gtk/gtk.h>

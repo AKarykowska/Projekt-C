@@ -12,6 +12,7 @@ void erase_board(void)
             board_state[i][j]=0;
     turn = 0;
     end = 0;
+    chosen_color = 1;
 }
 
 int check_diagonal(int x, int y, int dir)
